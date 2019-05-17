@@ -1,5 +1,5 @@
 # -*-coding:Utf-8 -*
-
+from collections import OrderedDict
 from labyrinthe import Labyrinthe
 
 """Ce module contient la classe Carte."""
@@ -22,7 +22,7 @@ class Carte:
 def creer_labyrinthe_depuis_chaine(chaine):
        i=0
        j=1
-       my_dic = dict()
+       my_dic = OrderedDict()
        for lettre in chaine:  #on enrgistre chaque caractere et sa position dans un dic
            if lettre == '\n':
                j=j+1
