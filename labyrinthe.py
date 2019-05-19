@@ -6,11 +6,10 @@ class Labyrinthe:
 
     """Classe représentant un labyrinthe."""
     
-    def __init__(self, robot, obstacles):
-        self.robot = robot
+    def __init__(self, obstacles):
         self.grille = obstacles
-        self._position = robot
         self.door = door(obstacles)
+        
     
     def __cartify__(self,dic):  #fonction pour convertir le dictionnaire en carte 
         chaine  = ""
@@ -18,28 +17,48 @@ class Labyrinthe:
             chaine = chaine + dic[i,j]
         return chaine
     
+    
     def print_labyrinthe(self):
         chaine  = self.__cartify__(self.grille)  
         print(chaine)
 
-    def move (self,direction,step):
+    def lab_to_chaine(self):
+       chaine  = self.__cartify__(self.grille)  
+       return chaine
+
+    def move (self,position,direction,step):
         #evluer la possibilité de mouvement sinon reste a la meme place 
-        position = self.robot 
         i=0
         while i<step:
             labyrinthe_card = addition_tuples(cardinals(direction),position)
             if labyrinthe_card in self.grille.keys() : 
-                if self.grille[labyrinthe_card] == ' ' or self.grille[labyrinthe_card] == '.' or self.grille[labyrinthe_card] == 'U'  : # si il existe un chemin 
+                if self.grille[labyrinthe_card] != 'O' or self.grille[labyrinthe_card] != 'x': # si il existe un chemin 
                    self.grille[labyrinthe_card] = 'X'   #on deplace le robot vers la case vide 
                    self.grille[position] = ' '          #on supprime l'ancienne position du robot
                    position = labyrinthe_card
             i=i+1
-        self.robot = position
-        #print(self.robot)
+    
+    def add_X(self,position):
+        if self.grille[position] == ' ':
+            self.grille[position] = 'x'
+            return True
+        return False
 
-        
-    def out(self):
-        if self.robot == self.door:
+    def murer(self,position):
+        if self.grille[position] == ' ':
+            self.grille[position]  = 'O'
+            return True
+        return False
+    
+    def percer(self,position):
+        if self.grille[position] == 'O':
+            self.grille[position]  = ' '
+            return True
+        return False
+
+
+    def out(self,position):
+        if position == self.door:
             return True
         return False
 
@@ -56,10 +75,10 @@ def cardinals(arg):
          "e":(-1,0),
          "n":(0,-1)
     }
-
     return mp.get(arg,(0,0))
+
 #definition de la somme des tuples 
 def addition_tuples(tuple1,tuple2):
-    i,j = tuple1
     x,y = tuple2
+    i,j = tuple1
     return (i+x,j+y)

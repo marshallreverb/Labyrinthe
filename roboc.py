@@ -5,11 +5,42 @@
 Exécutez-le avec Python pour lancer le jeu.
 
 """
-
 import os
 import pickle
+import socket
+import select
+
 
 from carte import Carte
+from player import Player
+
+HOST = ''
+PORT = 7411
+Server_lance = False
+Client_lance = False
+
+connexion_principale = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+def launch_server(HOST,PORT):
+    try:
+        connexion_principale.bind((HOST, PORT))
+        connexion_principale.listen(5)
+        print("Le serveur écoute à présent sur le port {}".format(PORT))
+        return True
+    except OSError:
+        if OSError.strerror == "Address already in use":
+            #launch_client()
+            Server_lance = True
+            return True
+    
+"""def launch_client():
+    os.popen("python3 client.py")
+    print("client lance")
+    Client_lance = True
+"""
+
+Server_lance = launch_server (HOST,PORT)
+    #launch_client()
 
 # On charge les cartes existantes
 cartes = []
@@ -28,61 +59,42 @@ print("Labyrinthes existants :")
 for i, carte in enumerate(cartes):
     print("  {} - {}".format(i + 1, carte.nom))
 
-exist_game =False
-# Si il y a une partie sauvegardée, on l'affiche, à compléter
-for nom_fichier in os.listdir("save"):
-    if nom_fichier.endswith(".s") :
-        chemin = os.path.join("save", nom_fichier)
-        print("reprise de la partie en cours ...")
-        with open(chemin, "rb") as fichier:
-            carte  = pickle.Unpickler(fichier).load()
-            exist_game = True
+choix = int(input("Entrez un numéro de labyrinthe pour commencer à jouer :")) 
+carte = cartes[choix-1]
+
+clients_connectes = []
+players = []
+while Server_lance :
+    connexions_demandees, wlist, xlist = select.select([connexion_principale],
+        [], [], 0.05)
+    for connexion in connexions_demandees:
+        connexion_avec_client, infos_connexion = connexion.accept()
+        # On ajoute le socket connecté à la liste des clients
+        clients_connectes.append(connexion_avec_client)
+        #nouveau joueur 
+        position = carte.add_player()
+        players.append(Player(position,len(clients_connectes),connexion_avec_client))
+        print("player added ")
+    clients_a_lire = []
+    try:
+        clients_a_lire, wlist, xlist = select.select(clients_connectes,
+                [], [], 0.05)
+    except select.error:
+        pass
+    else :  
+        for client in clients_a_lire : 
+             msg_recu = client.recv(1024)
+             msg_recu = msg_recu.decode()
+             print("Recu {} ".format(msg_recu))
+             client.send(b"yoyyo")
+             if msg_recu == "fin":
+                serveur_lance = False
             
-if exist_game:
-    reprise = input("une partie en cours a été trouvé voulez vous continuer(O/N) : ")
-    if reprise.lower() == "n":
-        choix = int(input("Entrez un numéro de labyrinthe pour commencer à jouer :")) 
-        carte = cartes[choix-1]
-else :
-    choix = int(input("Entrez un numéro de labyrinthe pour commencer à jouer :")) 
-    carte = cartes[choix-1]
 
-win = 0
-mouv = ""
+print("Fermeture des connexions")
+for client in clients_connectes:
+    client.close()
 
+connexion_principale.close()
 
-try :
-    while win == 0 and mouv != "q":#affichege du labyrinthe
-        #on check si notre deplacment est winner
-
-        carte.labyrinthe.print_labyrinthe()
-        mouv = input()
-        if mouv[0] in " s n o e":
-            #si le mouv entré est correct on procède au deplacment du robot
-            if len(mouv) == 1:
-                step = 1
-            else :
-                if mouv[1].isdigit() : 
-                    step = int(mouv[1]) 
-            carte.labyrinthe.move(mouv[0],step)  
-            
-            #on enregistre le dernier mouvement
-            
-            chemin = os.path.join("save", "temp.s")
-            with open(chemin, "wb") as fichier:
-                    pickler  = pickle.Pickler(fichier)
-                    pickler.dump(carte)
-        if carte.labyrinthe.out():
-            print("Félicitations ! Vous avez gagné !")
-            os.remove(chemin) # *****
-            win = 1
-except KeyboardInterrupt:
-    print("Arrêt de jeu (essayer (q) la prochaine fois ) ...")
         
-
-
-
-
-
-
-
