@@ -38,14 +38,14 @@ def creer_labyrinthe_depuis_chaine(chaine):
        my_dic = OrderedDict()
        for lettre in chaine:  #on enrgistre chaque caractere et sa position dans un dic
            if lettre == '\n':
-               j=j+1
-               i=0
+               i=i+1
+               j=0
            my_dic[i,j] = lettre 
-           i=i+1
+           j=j+1
        labyrinthe = Labyrinthe(my_dic)
        return labyrinthe,i,j
 
 def generate_tuple(i,j):
-    x = random.choice(range(0,i))
-    y = random.choice(range(0,j))
+    x = random.choice(range(0,j))
+    y = random.choice(range(0,i))
     return (x,y)

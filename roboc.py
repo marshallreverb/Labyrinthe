@@ -83,12 +83,14 @@ while Server_lance :
         pass
     else :  
         for client in clients_a_lire : 
-             msg_recu = client.recv(1024)
-             msg_recu = msg_recu.decode()
-             print("Recu {} ".format(msg_recu))
-             client.send(b"yoyyo")
-             if msg_recu == "fin":
-                serveur_lance = False
+            msg_recu = client.recv(1024)
+            msg_recu = msg_recu.decode()
+            print("Recu {} ".format(msg_recu))
+            #msg to send 
+            msg = carte.labyrinthe.lab_to_chaine()
+            client.send(msg.encode())
+            if msg_recu == "fin":
+               serveur_lance = False
             
 
 print("Fermeture des connexions")
@@ -96,5 +98,3 @@ for client in clients_connectes:
     client.close()
 
 connexion_principale.close()
-
-        
